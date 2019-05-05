@@ -1,0 +1,24 @@
+# Use Dockerized infrastructure
+sudo: false
+
+# Use node_js environnement
+language: node_js
+
+node_js:
+  - "8"
+
+services:
+  - docker
+
+script:
+  - docker build -t $IMAGE_NAME:latest .
+  - echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+  - docker tag $IMAGE_NAME:latest $IMAGE_NAME:$TRAVIS_COMMIT
+  - docker push $IMAGE_NAME:latest
+  - docker push $IMAGE_NAME:$TRAVIS_COMMIT
+
+  - sudo apt-get update && sudo apt-get -y install gettext-base
+
+  - curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+  - chmod u+x ./kubectl
+  - ./scripts/ci-deploy.sh
